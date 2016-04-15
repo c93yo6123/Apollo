@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<previews>
+
+    <preview
+        name="Config1"
+        activity="com.example.apollo_1.MainActivity$PlaceholderFragment"
+        config="layout-ldltr-sw320dp-w320dp-h533dp-normal-notround-port-notnight-hdpi-finger-keyssoft-nokeys-navexposed-trackball-800x480-v23"
+        device="3.7&quot; WVGA (Nexus One)"
+        devicestate="Portrait"
+        target="Android 6.0"
+        theme="@android:style/Theme.Holo.Light" >
+    </preview>
+
+</previews>
