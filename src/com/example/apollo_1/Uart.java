@@ -6,6 +6,7 @@ public class Uart {
 
 	public String[] byte2data(byte[] txValue, int[][] format) {
 		String bin = bytetransform(txValue, 2);
+		// int[][] result = new int[txValue.length / 4][txValue.length / 2];
 		String[] Array;
 		ArrayList<String> mStringList = new ArrayList<String>();
 		for (int i = 0; i < txValue.length / 4; i++) {
