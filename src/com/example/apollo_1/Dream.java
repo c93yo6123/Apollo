@@ -17,7 +17,7 @@ public class Dream extends Fragment {
 	static TextView bat;
 	ImageView iv;
 	static Boolean maonoff = true;
-
+	
 	public Dream() {
 	}
 
