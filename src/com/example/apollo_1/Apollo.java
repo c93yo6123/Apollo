@@ -8,10 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class Apollo extends Fragment implements OnClickListener {
 	static Uart uart;
 	ImageView heart, step, uv;
+	static TextView tv_heart, tv_step, tv_uv;
 
 	public Apollo() {
 	}
@@ -25,6 +27,10 @@ public class Apollo extends Fragment implements OnClickListener {
 		heart = (ImageView) rootView.findViewById(R.id.heart_im);
 		step = (ImageView) rootView.findViewById(R.id.step_im);
 		uv = (ImageView) rootView.findViewById(R.id.uv_im);
+
+		tv_heart = (TextView) rootView.findViewById(R.id.heart_msg);
+		tv_step = (TextView) rootView.findViewById(R.id.step_msg);
+		tv_uv = (TextView) rootView.findViewById(R.id.uv_msg);
 
 		heart.setOnClickListener(Apollo.this);
 		step.setOnClickListener(Apollo.this);

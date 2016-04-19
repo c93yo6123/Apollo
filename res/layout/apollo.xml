@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:text="Medium Text"
+            android:text=""
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </RelativeLayout>
 
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:text="Medium Text"
+            android:text=""
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </RelativeLayout>
 
@@ -71,7 +71,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:src="@drawable/uv" />
+            android:src="@drawable/uv"
+            android:visibility="invisible" />
 
         <TextView
             android:id="@+id/uv_msg"
@@ -79,7 +80,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:text="Medium Text"
+            android:text=""
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </RelativeLayout>
 

@@ -24,6 +24,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
@@ -57,6 +58,7 @@ public class MainActivity extends ActionBarActivity {
 	static String data;
 	String connmenu;
 	static Uart uart;
+	// 年 月 分 日 時 秒
 	int[][] format = { { 8, 8, 8, 8 }, { 6, 4, 6, 5, 5, 6 }, { 8, 8, 8, 8 }, { 8, 8, 8, 8 } };
 	static String header;
 	Boolean tx = false;
@@ -202,13 +204,20 @@ public class MainActivity extends ActionBarActivity {
 									Dream.progBar.setProgress(Integer.parseInt(data));
 									Dream.bat.setText(data + "%");
 								}
+
 								if (header.equals("FF000000") && data.equals("1"))
 									getSupportFragmentManager().beginTransaction().show(apollo).commit();
+								else if (header.equals("FF000000") && data.equals("2"))
+									getSupportFragmentManager().beginTransaction().show(dream).commit();
+
+								if (header.equals("01000002"))
+									Apollo.tv_step.setText(data+" 次");
 
 								new CountDownTimer(1000, 500) {
 
 									public void onFinish() {
-										PDialog.dismiss();
+										if (PDialog != null)
+											PDialog.dismiss();
 									}
 
 									public void onTick(long millisUntilFinished) {
@@ -313,21 +322,20 @@ public class MainActivity extends ActionBarActivity {
 			mService.close();
 		mService.connect(deviceAddress);
 
-		// PDialog = ProgressDialog.show(MainActivity.this,
-		// getResources().getString(R.string.dialogtittle),
-		// getResources().getString(R.string.dialogmassage), true);
-		PDialog = new ProgressDialog(MainActivity.this);
-		PDialog.setTitle(getResources().getString(R.string.dialogtittle));
-		PDialog.setMessage(getResources().getString(R.string.dialogmassage));
-		PDialog.setCancelable(false);
-		PDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-			}
-		});
-		PDialog.show();
+		PDialog = ProgressDialog.show(MainActivity.this, getResources().getString(R.string.dialogtittle),
+				getResources().getString(R.string.dialogmassage), true);
+		// PDialog = new ProgressDialog(MainActivity.this);
+		// PDialog.setTitle(getResources().getString(R.string.dialogtittle));
+		// PDialog.setMessage(getResources().getString(R.string.dialogmassage));
+		// PDialog.setCancelable(false);
+		// PDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+		//
+		// @Override
+		// public void onClick(DialogInterface dialog, int which) {
+		// // TODO Auto-generated method stub
+		// }
+		// });
+		// PDialog.show();
 
 		new Thread(new Runnable() {
 
@@ -352,25 +360,37 @@ public class MainActivity extends ActionBarActivity {
 						// getSupportFragmentManager().beginTransaction().show(apollo).commit();
 						// }
 
-						// Calendar c = Calendar.getInstance();
-						//
-						// String time1 = uart.dec2Byte(new int[] {
-						// (c.get(Calendar.YEAR) - 2015),
-						// (c.get(Calendar.MONTH) + 1), c.get(Calendar.MINUTE)
-						// }, new int[] { 6, 4, 6 });
-						// String time2 = uart.dec2Byte(new int[] {
-						// c.get(Calendar.DAY_OF_MONTH),
-						// c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.SECOND)
-						// }, new int[] { 5, 5, 6 });
-						//
-						// mService.writeRXCharacteristic(uart.hex2Byte("7000" +
-						// time1.toUpperCase()));
-						// mService.writeRXCharacteristic(uart.hex2Byte("7001" +
-						// time2.toUpperCase()));
+						Calendar c = Calendar.getInstance();
+
+						String time1 = uart.dec2Byte(new int[] { (c.get(Calendar.YEAR) - 2015),
+								(c.get(Calendar.MONTH) + 1), c.get(Calendar.MINUTE) }, new int[] { 6, 4, 6 });
+						String time2 = uart.dec2Byte(new int[] { c.get(Calendar.DAY_OF_MONTH),
+								c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.SECOND) }, new int[] { 5, 5, 6 });
+
+						mService.writeRXCharacteristic(uart.hex2Byte("7000" + time1.toUpperCase()));
+						mService.writeRXCharacteristic(uart.hex2Byte("7001" + time2.toUpperCase()));
 						// mService.writeRXCharacteristic(uart.hex2Byte("4100" +
 						// time1.toUpperCase()));
 						// mService.writeRXCharacteristic(uart.hex2Byte("4101" +
 						// time2.toUpperCase()));
+
+						runOnUiThread(new Runnable() {
+							public void run() {
+								new CountDownTimer(3000, 1000) {
+
+									public void onFinish() {
+										if (PDialog != null)
+											PDialog.dismiss();
+									}
+
+									public void onTick(long millisUntilFinished) {
+
+									}
+
+								}.start();
+							}
+						});
+
 						break;
 					}
 				}
