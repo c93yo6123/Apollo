@@ -193,14 +193,17 @@ public class MainActivity extends ActionBarActivity {
 						try {
 							if (tx) {
 								String[] s = uart.byte2data(txValue, format);
-								header = s[0];
+								header = s[0].toUpperCase();
+								data = s[2];
 
+								Log.v("test", header + " " + data);
 								if (header.equals("00000014") && device.equals("Headset")) {
-									data = s[2];
 									Log.v("test", data);
 									Dream.progBar.setProgress(Integer.parseInt(data));
 									Dream.bat.setText(data + "%");
 								}
+								if (header.equals("FF000000") && data.equals("1"))
+									getSupportFragmentManager().beginTransaction().show(apollo).commit();
 
 								new CountDownTimer(1000, 500) {
 
@@ -310,8 +313,21 @@ public class MainActivity extends ActionBarActivity {
 			mService.close();
 		mService.connect(deviceAddress);
 
-		PDialog = ProgressDialog.show(MainActivity.this, getResources().getString(R.string.dialogtittle),
-				getResources().getString(R.string.dialogmassage), true);
+		// PDialog = ProgressDialog.show(MainActivity.this,
+		// getResources().getString(R.string.dialogtittle),
+		// getResources().getString(R.string.dialogmassage), true);
+		PDialog = new ProgressDialog(MainActivity.this);
+		PDialog.setTitle(getResources().getString(R.string.dialogtittle));
+		PDialog.setMessage(getResources().getString(R.string.dialogmassage));
+		PDialog.setCancelable(false);
+		PDialog.setButton("Cancel", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// TODO Auto-generated method stub
+			}
+		});
+		PDialog.show();
 
 		new Thread(new Runnable() {
 
@@ -328,25 +344,33 @@ public class MainActivity extends ActionBarActivity {
 						}
 
 						tx = true;
-						if (device.equals("Headset")) {
-							mService.writeRXCharacteristic(uart.hex2Byte("10000000"));
-							getSupportFragmentManager().beginTransaction().show(dream).commit();
-						} else if (device.equals("Wristband")) {
-							mService.writeRXCharacteristic(uart.hex2Byte("50000000"));
-							getSupportFragmentManager().beginTransaction().show(apollo).commit();
-						}
+						// if (device.equals("Headset")) {
+						// mService.writeRXCharacteristic(uart.hex2Byte("10000000"));
+						// getSupportFragmentManager().beginTransaction().show(dream).commit();
+						// } else if (device.equals("Wristband")) {
+						mService.writeRXCharacteristic(uart.hex2Byte("F0000000"));
+						// getSupportFragmentManager().beginTransaction().show(apollo).commit();
+						// }
 
-						Calendar c = Calendar.getInstance();
-
-						String time1 = uart.dec2Byte(new int[] { (c.get(Calendar.YEAR) - 2015),
-								(c.get(Calendar.MONTH) + 1), c.get(Calendar.MINUTE) }, new int[] { 6, 4, 6 });
-						String time2 = uart.dec2Byte(new int[] { c.get(Calendar.DAY_OF_MONTH),
-								c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.SECOND) }, new int[] { 5, 5, 6 });
-
-						mService.writeRXCharacteristic(uart.hex2Byte("7000" + time1.toUpperCase()));
-						mService.writeRXCharacteristic(uart.hex2Byte("7001" + time2.toUpperCase()));
-						mService.writeRXCharacteristic(uart.hex2Byte("4100" + time1.toUpperCase()));
-						mService.writeRXCharacteristic(uart.hex2Byte("4101" + time2.toUpperCase()));
+						// Calendar c = Calendar.getInstance();
+						//
+						// String time1 = uart.dec2Byte(new int[] {
+						// (c.get(Calendar.YEAR) - 2015),
+						// (c.get(Calendar.MONTH) + 1), c.get(Calendar.MINUTE)
+						// }, new int[] { 6, 4, 6 });
+						// String time2 = uart.dec2Byte(new int[] {
+						// c.get(Calendar.DAY_OF_MONTH),
+						// c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.SECOND)
+						// }, new int[] { 5, 5, 6 });
+						//
+						// mService.writeRXCharacteristic(uart.hex2Byte("7000" +
+						// time1.toUpperCase()));
+						// mService.writeRXCharacteristic(uart.hex2Byte("7001" +
+						// time2.toUpperCase()));
+						// mService.writeRXCharacteristic(uart.hex2Byte("4100" +
+						// time1.toUpperCase()));
+						// mService.writeRXCharacteristic(uart.hex2Byte("4101" +
+						// time2.toUpperCase()));
 						break;
 					}
 				}
