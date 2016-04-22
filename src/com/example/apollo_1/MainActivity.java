@@ -368,6 +368,12 @@ public class MainActivity extends ActionBarActivity {
 								c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.SECOND) }, new int[] { 5, 5, 6 });
 
 						mService.writeRXCharacteristic(uart.hex2Byte("7000" + time1.toUpperCase()));
+						try {
+							Thread.sleep(500);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						mService.writeRXCharacteristic(uart.hex2Byte("7001" + time2.toUpperCase()));
 						// mService.writeRXCharacteristic(uart.hex2Byte("4100" +
 						// time1.toUpperCase()));

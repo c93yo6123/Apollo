@@ -28,6 +28,8 @@ public class Apollo extends Fragment implements OnClickListener {
 		step = (ImageView) rootView.findViewById(R.id.step_im);
 		uv = (ImageView) rootView.findViewById(R.id.uv_im);
 
+		heart.setImageResource(R.drawable.time);
+
 		tv_heart = (TextView) rootView.findViewById(R.id.heart_msg);
 		tv_step = (TextView) rootView.findViewById(R.id.step_msg);
 		tv_uv = (TextView) rootView.findViewById(R.id.uv_msg);
