@@ -1,6 +1,9 @@
 package com.example.apollo_1;
 
+import java.util.Calendar;
+
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,7 +46,6 @@ public class Apollo extends Fragment implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		// TODO Auto-generated method stub
-		Log.v("test", "" + v.getId());
 		switch (v.getId()) {
 		case R.id.heart_im:
 			MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010001"));

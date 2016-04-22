@@ -1,6 +1,8 @@
 package com.example.apollo_1;
 
 import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -58,12 +60,13 @@ public class MainActivity extends ActionBarActivity {
 	static String data;
 	String connmenu;
 	static Uart uart;
+	Calendar calendar;
 	// 年 月 分 日 時 秒
 	int[][] format = { { 8, 8, 8, 8 }, { 6, 4, 6, 5, 5, 6 }, { 8, 8, 8, 8 }, { 8, 8, 8, 8 } };
 	static String header;
 	Boolean tx = false;
 
-	Dream dream;
+	// Dream dream;
 	Apollo apollo;
 
 	static int mProgressStatus = 0;
@@ -78,12 +81,13 @@ public class MainActivity extends ActionBarActivity {
 		setTitle("Devices");
 
 		uart = new Uart();
-		dream = new Dream();
+		// dream = new Dream();
 		apollo = new Apollo();
 
-		getSupportFragmentManager().beginTransaction().add(R.id.pager, dream).commit();
+		// getSupportFragmentManager().beginTransaction().add(R.id.pager,
+		// dream).commit();
 		getSupportFragmentManager().beginTransaction().add(R.id.pager, apollo).commit();
-		getSupportFragmentManager().beginTransaction().hide(dream).commit();
+		// getSupportFragmentManager().beginTransaction().hide(dream).commit();
 		getSupportFragmentManager().beginTransaction().hide(apollo).commit();
 
 		connmenu = getResources().getString(R.string.connect);
@@ -172,7 +176,7 @@ public class MainActivity extends ActionBarActivity {
 				tx = false;
 				setTitle("Devices");
 
-				getSupportFragmentManager().beginTransaction().hide(dream).commit();
+				// getSupportFragmentManager().beginTransaction().hide(dream).commit();
 				getSupportFragmentManager().beginTransaction().hide(apollo).commit();
 
 				DeviceListActivity.readData();
@@ -205,13 +209,46 @@ public class MainActivity extends ActionBarActivity {
 									Dream.bat.setText(data + "%");
 								}
 
-								if (header.equals("FF000000") && data.equals("1"))
+								if (header.equals("FF000000") && data.equals("1")) {
 									getSupportFragmentManager().beginTransaction().show(apollo).commit();
-								else if (header.equals("FF000000") && data.equals("2"))
-									getSupportFragmentManager().beginTransaction().show(dream).commit();
+									// Timer timer = new Timer(true);
+									// timer.schedule(new MyTimerTask(), 1000,
+									// 1000);
+								} else if (header.equals("FF000000") && data.equals("2")) {
+									// getSupportFragmentManager().beginTransaction().show(dream).commit();
+								}
+
+								if (header.equals("FF000000") && data.equals("1")
+										|| header.equals("FF000000") && data.equals("2")) {
+									calendar = Calendar.getInstance();
+									String time2 = uart.dec2Byte(
+											new int[] { calendar.get(Calendar.DAY_OF_MONTH),
+													calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.SECOND) },
+											new int[] { 5, 5, 6 });
+									mService.writeRXCharacteristic(uart.hex2Byte("7001" + time2.toUpperCase()));
+									try {
+										Thread.sleep(1000);
+									} catch (InterruptedException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+									String time1 = uart.dec2Byte(
+											new int[] { (calendar.get(Calendar.YEAR) - 2015),
+													(calendar.get(Calendar.MONTH) + 1), calendar.get(Calendar.MINUTE) },
+											new int[] { 6, 4, 6 });
+
+									mService.writeRXCharacteristic(uart.hex2Byte("7000" + time1.toUpperCase()));
+
+									// mService.writeRXCharacteristic(uart.hex2Byte("4100"
+									// +
+									// time1.toUpperCase()));
+									// mService.writeRXCharacteristic(uart.hex2Byte("4101"
+									// +
+									// time2.toUpperCase()));
+								}
 
 								if (header.equals("01000002"))
-									Apollo.tv_step.setText(data+" 次");
+									Apollo.tv_step.setText(data + " 次");
 
 								new CountDownTimer(1000, 500) {
 
@@ -360,26 +397,6 @@ public class MainActivity extends ActionBarActivity {
 						// getSupportFragmentManager().beginTransaction().show(apollo).commit();
 						// }
 
-						Calendar c = Calendar.getInstance();
-
-						String time1 = uart.dec2Byte(new int[] { (c.get(Calendar.YEAR) - 2015),
-								(c.get(Calendar.MONTH) + 1), c.get(Calendar.MINUTE) }, new int[] { 6, 4, 6 });
-						String time2 = uart.dec2Byte(new int[] { c.get(Calendar.DAY_OF_MONTH),
-								c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.SECOND) }, new int[] { 5, 5, 6 });
-
-						mService.writeRXCharacteristic(uart.hex2Byte("7000" + time1.toUpperCase()));
-						try {
-							Thread.sleep(500);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						mService.writeRXCharacteristic(uart.hex2Byte("7001" + time2.toUpperCase()));
-						// mService.writeRXCharacteristic(uart.hex2Byte("4100" +
-						// time1.toUpperCase()));
-						// mService.writeRXCharacteristic(uart.hex2Byte("4101" +
-						// time2.toUpperCase()));
-
 						runOnUiThread(new Runnable() {
 							public void run() {
 								new CountDownTimer(3000, 1000) {
@@ -402,6 +419,27 @@ public class MainActivity extends ActionBarActivity {
 				}
 			}
 		}).start();
+	}
+
+	public class MyTimerTask extends TimerTask {
+		public void run() {
+			runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					calendar = Calendar.getInstance();
+					int hour = calendar.get(Calendar.HOUR_OF_DAY);
+					int min = calendar.get(Calendar.MINUTE);
+					int sec = calendar.get(Calendar.SECOND);
+					Apollo.tv_heart.setText(fill_zero(hour) + ":" + fill_zero(min) + ":" + fill_zero(sec));
+				}
+			});
+		}
+	};
+
+	String fill_zero(int number) {
+		return ((number < 10) ? "0" : "") + number;
 	}
 
 	@Override

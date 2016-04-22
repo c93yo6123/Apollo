@@ -186,11 +186,11 @@ public class DeviceListActivity extends Activity {
 			myProgress = 0;
 			pgbar.setProgress(myProgress);
 
-			new Thread(runnable).start();
-
 			mScanning = true;
 			mBluetoothAdapter.startLeScan(mLeScanCallback);
 			cancelButton.setText(R.string.cancel);
+
+			new Thread(runnable).start();
 		} else {
 			mScanning = false;
 			mBluetoothAdapter.stopLeScan(mLeScanCallback);
