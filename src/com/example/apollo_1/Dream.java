@@ -2,6 +2,8 @@ package com.example.apollo_1;
 
 import com.example.seekarc_library.SeekArc;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -12,19 +14,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class Dream extends Fragment {
+	Activity activity;
 	static Uart uart;
 	static SeekArc progBar;
 	static TextView bat;
 	ImageView iv;
 	static Boolean maonoff = true;
 	
-	public Dream() {
+	public Dream(Context context) {
+		activity = (Activity) context;
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.dream, container, false);
-		getActivity().setTitle("Dream");
+		activity.setTitle("Dream");
 		uart = new Uart();
 		progBar = (SeekArc) rootView.findViewById(R.id.seekArcComplete);
 		bat = (TextView) rootView.findViewById(R.id.battery);

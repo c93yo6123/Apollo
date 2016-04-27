@@ -3,7 +3,6 @@ package com.example.apollo_1;
 import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -20,13 +19,16 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
@@ -66,32 +68,21 @@ public class MainActivity extends ActionBarActivity {
 	static String header;
 	Boolean tx = false;
 
-	// Dream dream;
+	Dream dream;
 	Apollo apollo;
+	static int BLE_Steps = 0;
 
 	static int mProgressStatus = 0;
 	String name, address, device;
 	ProgressDialog PDialog;
 	BluetoothAdapter mBluetoothAdapter;
 
+	String BLE_action = "";
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		setTitle("Devices");
-
-		uart = new Uart();
-		// dream = new Dream();
-		apollo = new Apollo();
-
-		// getSupportFragmentManager().beginTransaction().add(R.id.pager,
-		// dream).commit();
-		getSupportFragmentManager().beginTransaction().add(R.id.pager, apollo).commit();
-		// getSupportFragmentManager().beginTransaction().hide(dream).commit();
-		getSupportFragmentManager().beginTransaction().hide(apollo).commit();
-
-		connmenu = getResources().getString(R.string.connect);
-
 		BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 		mBluetoothAdapter = bluetoothManager.getAdapter();
 
@@ -101,10 +92,40 @@ public class MainActivity extends ActionBarActivity {
 			finish();
 			return;
 		}
+
+		if (!mBtAdapter.isEnabled()) {
+			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+			startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+		}
+
+		uart = new Uart();
+		dream = new Dream(MainActivity.this);
+		apollo = new Apollo(MainActivity.this);
+
+		getSupportFragmentManager().beginTransaction().add(R.id.pager, dream).commit();
+		getSupportFragmentManager().beginTransaction().add(R.id.pager, apollo).commit();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		getSupportFragmentManager().beginTransaction().hide(dream).commit();
+		getSupportFragmentManager().beginTransaction().hide(apollo).commit();
+
+		setTitle("Devices");
+		connmenu = getResources().getString(R.string.connect);
+
 		service_init();
 
-		Intent newIntent = new Intent(MainActivity.this, DeviceListActivity.class);
-		startActivityForResult(newIntent, REQUEST_SELECT_DEVICE);
+		while (true) {
+			if (mBtAdapter.isEnabled()) {
+				Intent newIntent = new Intent(MainActivity.this, DeviceListActivity.class);
+				startActivityForResult(newIntent, REQUEST_SELECT_DEVICE);
+				break;
+			}
+		}
+
 	}
 
 	@Override
@@ -159,25 +180,34 @@ public class MainActivity extends ActionBarActivity {
 	private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
 
 		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
+			BLE_action = intent.getAction();
 
 			// *********************//
-			if (action.equals(UartService.ACTION_GATT_CONNECTED)) {
+			if (BLE_action.equals(UartService.ACTION_GATT_CONNECTED)) {
 				connmenu = getResources().getString(R.string.disconnect);
 				invalidateOptionsMenu();
 				mState = UART_PROFILE_CONNECTED;
 			}
 
 			// *********************//
-			if (action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
+			if (BLE_action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
 				connmenu = getResources().getString(R.string.connect);
 				invalidateOptionsMenu();
 				mState = UART_PROFILE_DISCONNECTED;
 				tx = false;
 				setTitle("Devices");
 
-				// getSupportFragmentManager().beginTransaction().hide(dream).commit();
-				getSupportFragmentManager().beginTransaction().hide(apollo).commit();
+				try {
+					getSupportFragmentManager().beginTransaction().hide(apollo).commit();
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+
+				try {
+					getSupportFragmentManager().beginTransaction().hide(dream).commit();
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
 
 				DeviceListActivity.readData();
 
@@ -186,11 +216,11 @@ public class MainActivity extends ActionBarActivity {
 			}
 
 			// *********************//
-			if (action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
+			if (BLE_action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
 				mService.enableTXNotification();
 			}
 			// *********************//
-			if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
+			if (BLE_action.equals(UartService.ACTION_DATA_AVAILABLE)) {
 
 				final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
 
@@ -209,14 +239,10 @@ public class MainActivity extends ActionBarActivity {
 									Dream.bat.setText(data + "%");
 								}
 
-								if (header.equals("FF000000") && data.equals("1")) {
+								if (header.equals("FF000000") && data.equals("1"))
 									getSupportFragmentManager().beginTransaction().show(apollo).commit();
-									// Timer timer = new Timer(true);
-									// timer.schedule(new MyTimerTask(), 1000,
-									// 1000);
-								} else if (header.equals("FF000000") && data.equals("2")) {
-									// getSupportFragmentManager().beginTransaction().show(dream).commit();
-								}
+								else if (header.equals("FF000000") && data.equals("2"))
+									getSupportFragmentManager().beginTransaction().show(dream).commit();
 
 								if (header.equals("FF000000") && data.equals("1")
 										|| header.equals("FF000000") && data.equals("2")) {
@@ -247,8 +273,10 @@ public class MainActivity extends ActionBarActivity {
 									// time2.toUpperCase()));
 								}
 
-								if (header.equals("01000002"))
-									Apollo.tv_step.setText(data + " ¦¸");
+								if (header.equals("01000002")) {
+									BLE_Steps = Integer.parseInt(data);
+									// Apollo.tv_step.setText(data + " ¦¸");
+								}
 
 								new CountDownTimer(1000, 500) {
 
@@ -294,7 +322,6 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-
 		try {
 			LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
 		} catch (Exception ignore) {
@@ -308,11 +335,18 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		if (!mBtAdapter.isEnabled()) {
-			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-			startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+		if (BLE_action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
+			try {
+				getSupportFragmentManager().beginTransaction().hide(dream).commit();
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+			try {
+				getSupportFragmentManager().beginTransaction().hide(apollo).commit();
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
 		}
-
 	}
 
 	@Override
@@ -396,7 +430,7 @@ public class MainActivity extends ActionBarActivity {
 						mService.writeRXCharacteristic(uart.hex2Byte("F0000000"));
 						// getSupportFragmentManager().beginTransaction().show(apollo).commit();
 						// }
-
+						Log.v("test", "" + uart.hex2Byte("F0000000"));
 						runOnUiThread(new Runnable() {
 							public void run() {
 								new CountDownTimer(3000, 1000) {
@@ -419,27 +453,6 @@ public class MainActivity extends ActionBarActivity {
 				}
 			}
 		}).start();
-	}
-
-	public class MyTimerTask extends TimerTask {
-		public void run() {
-			runOnUiThread(new Runnable() {
-
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					calendar = Calendar.getInstance();
-					int hour = calendar.get(Calendar.HOUR_OF_DAY);
-					int min = calendar.get(Calendar.MINUTE);
-					int sec = calendar.get(Calendar.SECOND);
-					Apollo.tv_heart.setText(fill_zero(hour) + ":" + fill_zero(min) + ":" + fill_zero(sec));
-				}
-			});
-		}
-	};
-
-	String fill_zero(int number) {
-		return ((number < 10) ? "0" : "") + number;
 	}
 
 	@Override
