@@ -68,6 +68,7 @@ public class MainActivity extends ActionBarActivity {
 	static String header;
 	Boolean tx = false;
 
+	Fragment device_layout;
 	Dream dream;
 	Apollo apollo;
 	static int BLE_Steps = 0;
@@ -198,13 +199,7 @@ public class MainActivity extends ActionBarActivity {
 				setTitle("Devices");
 
 				try {
-					getSupportFragmentManager().beginTransaction().hide(apollo).commit();
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
-
-				try {
-					getSupportFragmentManager().beginTransaction().hide(dream).commit();
+					getSupportFragmentManager().beginTransaction().hide(device_layout).commit();
 				} catch (Exception e) {
 					// TODO: handle exception
 				}
@@ -239,10 +234,13 @@ public class MainActivity extends ActionBarActivity {
 									Dream.bat.setText(data + "%");
 								}
 
-								if (header.equals("FF000000") && data.equals("1"))
+								if (header.equals("FF000000") && data.equals("1")) {
 									getSupportFragmentManager().beginTransaction().show(apollo).commit();
-								else if (header.equals("FF000000") && data.equals("2"))
+									device_layout = apollo;
+								} else if (header.equals("FF000000") && data.equals("2")) {
 									getSupportFragmentManager().beginTransaction().show(dream).commit();
+									device_layout = dream;
+								}
 
 								if (header.equals("FF000000") && data.equals("1")
 										|| header.equals("FF000000") && data.equals("2")) {
@@ -337,12 +335,7 @@ public class MainActivity extends ActionBarActivity {
 		super.onResume();
 		if (BLE_action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
 			try {
-				getSupportFragmentManager().beginTransaction().hide(dream).commit();
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-			try {
-				getSupportFragmentManager().beginTransaction().hide(apollo).commit();
+				getSupportFragmentManager().beginTransaction().hide(device_layout).commit();
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
