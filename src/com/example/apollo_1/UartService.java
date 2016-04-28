@@ -71,7 +71,7 @@ public class UartService extends Service {
 
 	// Implements callback methods for GATT events that the app cares about. For
 	// example,
-	// connection change and services discovered.
+	// connection change and services discovered.	
 	private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
 		@Override
 		public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {

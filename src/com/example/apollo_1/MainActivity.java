@@ -46,7 +46,7 @@ public class MainActivity extends ActionBarActivity {
 	 * The {@link ViewPager} that will host the section contents.
 	 */
 	// ViewPager mViewPager;
-
+	public final static String SMS_RECEIVED = "android.intent.action.PHONE_STATE";
 	private static final int REQUEST_SELECT_DEVICE = 1;
 	private static final int REQUEST_ENABLE_BT = 2;
 	private static final int UART_PROFILE_READY = 10;
@@ -272,6 +272,7 @@ public class MainActivity extends ActionBarActivity {
 								}
 
 								if (header.equals("01000002")) {
+									Log.v("test", data);
 									BLE_Steps = Integer.parseInt(data);
 									// Apollo.tv_step.setText(data + " 次");
 								}
@@ -305,6 +306,13 @@ public class MainActivity extends ActionBarActivity {
 
 		LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver,
 				makeGattUpdateIntentFilter());
+		// registerReceiver(SMSReceiver, IntentFilter());
+	}
+
+	private static IntentFilter IntentFilter() {
+		final IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(SMS_RECEIVED);
+		return intentFilter;
 	}
 
 	private static IntentFilter makeGattUpdateIntentFilter() {
@@ -325,10 +333,55 @@ public class MainActivity extends ActionBarActivity {
 		} catch (Exception ignore) {
 			Log.e(TAG, ignore.toString());
 		}
+		// try {
+		// unregisterReceiver(SMSReceiver);
+		// } catch (Exception ignore) {
+		// }
 		unbindService(mServiceConnection);
 		mService.stopSelf();
 
 	}
+
+	// private final BroadcastReceiver SMSReceiver = new BroadcastReceiver() {
+	//
+	// @Override
+	// public void onReceive(Context context, Intent intent) {
+	// Toast.makeText(context,intent.getAction(), Toast.LENGTH_LONG).show();
+	// mService.writeRXCharacteristic(uart.hex2Byte("00010005"));
+	//
+	//// if (intent.getAction().equals(SMS_RECEIVED)) {
+	//// // 當接受到簡訊時
+	//// //
+	// MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010005"));
+	//// Bundle bundle = intent.getExtras();
+	//// if (bundle != null) {
+	//// Object[] myObjects = (Object[]) bundle.get("pdus");
+	//// // protocol description units 標準協定
+	//// // PDU可以是文字或多媒體，用Object陣列全包下來
+	////
+	//// SmsMessage[] messages = new SmsMessage[myObjects.length];
+	////
+	//// for (int i = 0; i < myObjects.length; i++) {
+	////
+	//// messages[i] = SmsMessage.createFromPdu((byte[]) myObjects[i]);
+	//// // 需將PDU格式轉成byte陣列
+	//// // 將PDU格式的資料轉為smsMessage的格式
+	//// // 由於簡訊長度的限制可能不止一封
+	//// }
+	////
+	//// StringBuilder sb = new StringBuilder();
+	//// for (SmsMessage tempMessage : messages) {
+	//// sb.append("收到來自：\n");
+	//// sb.append(tempMessage.getDisplayOriginatingAddress() + "\n\n");
+	//// sb.append("內容為：\n");
+	//// sb.append(tempMessage.getDisplayMessageBody());
+	//// }
+	//// Toast.makeText(context, sb.toString(), Toast.LENGTH_LONG).show();
+	//// }
+	//// }
+	//
+	// }
+	// };
 
 	@Override
 	public void onResume() {

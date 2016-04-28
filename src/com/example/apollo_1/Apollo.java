@@ -8,6 +8,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Apollo extends Fragment implements OnClickListener {
 	Activity activity;
@@ -48,8 +51,12 @@ public class Apollo extends Fragment implements OnClickListener {
 		step.setOnClickListener(Apollo.this);
 		uv.setOnClickListener(Apollo.this);
 
+		TelephonyManager TelephonyMgr = (TelephonyManager) activity.getSystemService(Context.TELEPHONY_SERVICE);
+		TelephonyMgr.listen(new TeleListener(), PhoneStateListener.LISTEN_CALL_STATE);
+
 		Timer timer = new Timer(true);
 		timer.schedule(new MyTimerTask(), 2000, 2000);
+
 		return rootView;
 	}
 
@@ -58,7 +65,7 @@ public class Apollo extends Fragment implements OnClickListener {
 		// TODO Auto-generated method stub
 		switch (v.getId()) {
 		case R.id.heart_im:
-			MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010001"));
+			MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010004"));
 			break;
 		case R.id.step_im:
 			MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010002"));
@@ -66,6 +73,34 @@ public class Apollo extends Fragment implements OnClickListener {
 		case R.id.uv_im:
 			MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010003"));
 			break;
+		}
+	}
+
+	class TeleListener extends PhoneStateListener {
+		public void onCallStateChanged(int state, String incomingNumber) {
+			super.onCallStateChanged(state, incomingNumber);
+			switch (state) {
+			// case TelephonyManager.CALL_STATE_IDLE:
+			// // CALL_STATE_IDLE;
+			// Toast.makeText(getApplicationContext(), "CALL_STATE_IDLE",
+			// Toast.LENGTH_LONG).show();
+			// break;
+			// case TelephonyManager.CALL_STATE_OFFHOOK:
+			// // CALL_STATE_OFFHOOK;
+			// Toast.makeText(getApplicationContext(), "CALL_STATE_OFFHOOK",
+			// Toast.LENGTH_LONG).show();
+			// break;
+			case TelephonyManager.CALL_STATE_RINGING:
+				// CALL_STATE_RINGING
+				MainActivity.mService.writeRXCharacteristic(uart.hex2Byte("00010005"));
+				// Toast.makeText(getApplicationContext(), incomingNumber,
+				// Toast.LENGTH_LONG).show();
+				// Toast.makeText(getApplicationContext(), "CALL_STATE_RINGING",
+				// Toast.LENGTH_LONG).show();
+				break;
+			default:
+				break;
+			}
 		}
 	}
 
@@ -82,7 +117,7 @@ public class Apollo extends Fragment implements OnClickListener {
 					// int sec = calendar.get(Calendar.SECOND);
 					// Apollo.tv_heart.setText(fill_zero(hour) + ":" +
 					// fill_zero(min) + ":" + fill_zero(sec));
-					tv_step.setText(MainActivity.BLE_Steps + " 大卡");
+					tv_step.setText((float) MainActivity.BLE_Steps / 20 + " 大卡");
 				}
 			});
 		}
