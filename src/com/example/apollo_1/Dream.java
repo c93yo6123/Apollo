@@ -20,7 +20,7 @@ public class Dream extends Fragment {
 	static TextView bat;
 	ImageView iv;
 	static Boolean maonoff = true;
-	
+
 	public Dream(Context context) {
 		activity = (Activity) context;
 	}
@@ -28,7 +28,6 @@ public class Dream extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.dream, container, false);
-		activity.setTitle("Dream");
 		uart = new Uart();
 		progBar = (SeekArc) rootView.findViewById(R.id.seekArcComplete);
 		bat = (TextView) rootView.findViewById(R.id.battery);

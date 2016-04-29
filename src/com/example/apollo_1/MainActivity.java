@@ -46,7 +46,8 @@ public class MainActivity extends ActionBarActivity {
 	 * The {@link ViewPager} that will host the section contents.
 	 */
 	// ViewPager mViewPager;
-	public final static String SMS_RECEIVED = "android.intent.action.PHONE_STATE";
+	// public final static String SMS_RECEIVED =
+	// "android.intent.action.PHONE_STATE";
 	private static final int REQUEST_SELECT_DEVICE = 1;
 	private static final int REQUEST_ENABLE_BT = 2;
 	private static final int UART_PROFILE_READY = 10;
@@ -79,6 +80,7 @@ public class MainActivity extends ActionBarActivity {
 	BluetoothAdapter mBluetoothAdapter;
 
 	String BLE_action = "";
+	Boolean fragment_show = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -104,14 +106,14 @@ public class MainActivity extends ActionBarActivity {
 		apollo = new Apollo(MainActivity.this);
 
 		getSupportFragmentManager().beginTransaction().add(R.id.pager, dream).commit();
-		getSupportFragmentManager().beginTransaction().add(R.id.pager, apollo).commit();
+		getSupportFragmentManager().beginTransaction().hide(dream).commit();
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		getSupportFragmentManager().beginTransaction().hide(dream).commit();
+		getSupportFragmentManager().beginTransaction().add(R.id.pager, apollo).commit();
 		getSupportFragmentManager().beginTransaction().hide(apollo).commit();
 
 		setTitle("Devices");
@@ -155,7 +157,8 @@ public class MainActivity extends ActionBarActivity {
 			} else {
 				if (mDevice != null) {
 					DeviceListActivity.saveData("", "", "");
-					mService.disconnect();
+					if (mService != null)
+						mService.disconnect();
 				}
 			}
 		}
@@ -198,16 +201,17 @@ public class MainActivity extends ActionBarActivity {
 				tx = false;
 				setTitle("Devices");
 
-				try {
+				if (fragment_show) {
 					getSupportFragmentManager().beginTransaction().hide(device_layout).commit();
-				} catch (Exception e) {
-					// TODO: handle exception
+					fragment_show = false;
 				}
 
 				DeviceListActivity.readData();
 
-				if (PDialog != null)
+				if (PDialog != null) {
 					PDialog.dismiss();
+					PDialog = null;
+				}
 			}
 
 			// *********************//
@@ -227,9 +231,9 @@ public class MainActivity extends ActionBarActivity {
 								header = s[0].toUpperCase();
 								data = s[2];
 
-								Log.v("test", header + " " + data);
+								// Log.v("test", header + " " + data);
 								if (header.equals("00000014") && device.equals("Headset")) {
-									Log.v("test", data);
+									// Log.v("test", data);
 									Dream.progBar.setProgress(Integer.parseInt(data));
 									Dream.bat.setText(data + "%");
 								}
@@ -237,13 +241,18 @@ public class MainActivity extends ActionBarActivity {
 								if (header.equals("FF000000") && data.equals("1")) {
 									getSupportFragmentManager().beginTransaction().show(apollo).commit();
 									device_layout = apollo;
+									setTitle("apollo");
+									registerReceiver(Apollo.SMSReceiver,
+											new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 								} else if (header.equals("FF000000") && data.equals("2")) {
 									getSupportFragmentManager().beginTransaction().show(dream).commit();
 									device_layout = dream;
+									setTitle("dream");
 								}
 
 								if (header.equals("FF000000") && data.equals("1")
 										|| header.equals("FF000000") && data.equals("2")) {
+									fragment_show = true;
 									calendar = Calendar.getInstance();
 									String time2 = uart.dec2Byte(
 											new int[] { calendar.get(Calendar.DAY_OF_MONTH),
@@ -272,7 +281,7 @@ public class MainActivity extends ActionBarActivity {
 								}
 
 								if (header.equals("01000002")) {
-									Log.v("test", data);
+									// Log.v("test", data);
 									BLE_Steps = Integer.parseInt(data);
 									// Apollo.tv_step.setText(data + " ¦¸");
 								}
@@ -280,8 +289,10 @@ public class MainActivity extends ActionBarActivity {
 								new CountDownTimer(1000, 500) {
 
 									public void onFinish() {
-										if (PDialog != null)
+										if (PDialog != null) {
 											PDialog.dismiss();
+											PDialog = null;
+										}
 									}
 
 									public void onTick(long millisUntilFinished) {
@@ -304,15 +315,10 @@ public class MainActivity extends ActionBarActivity {
 		Intent bindIntent = new Intent(this, UartService.class);
 		bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
+		Log.v("test", "123");
 		LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver,
 				makeGattUpdateIntentFilter());
 		// registerReceiver(SMSReceiver, IntentFilter());
-	}
-
-	private static IntentFilter IntentFilter() {
-		final IntentFilter intentFilter = new IntentFilter();
-		intentFilter.addAction(SMS_RECEIVED);
-		return intentFilter;
 	}
 
 	private static IntentFilter makeGattUpdateIntentFilter() {
@@ -333,10 +339,10 @@ public class MainActivity extends ActionBarActivity {
 		} catch (Exception ignore) {
 			Log.e(TAG, ignore.toString());
 		}
-		// try {
-		// unregisterReceiver(SMSReceiver);
-		// } catch (Exception ignore) {
-		// }
+		try {
+			unregisterReceiver(Apollo.SMSReceiver);
+		} catch (Exception ignore) {
+		}
 		unbindService(mServiceConnection);
 		mService.stopSelf();
 
@@ -387,10 +393,9 @@ public class MainActivity extends ActionBarActivity {
 	public void onResume() {
 		super.onResume();
 		if (BLE_action.equals(UartService.ACTION_GATT_DISCONNECTED)) {
-			try {
+			if (fragment_show) {
 				getSupportFragmentManager().beginTransaction().hide(device_layout).commit();
-			} catch (Exception e) {
-				// TODO: handle exception
+				fragment_show = false;
 			}
 		}
 	}
@@ -409,6 +414,11 @@ public class MainActivity extends ActionBarActivity {
 				name = data.getStringExtra("NAME");
 				address = data.getStringExtra("ADDRESS");
 				device = data.getStringExtra("Device");
+
+				if (mService != null)
+					mService.close();
+				mService.connect(deviceAddress);
+
 				Loading(deviceAddress);
 			}
 			break;
@@ -435,10 +445,6 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	private void Loading(String deviceAddress) {
-		if (mService != null)
-			mService.close();
-		mService.connect(deviceAddress);
-
 		PDialog = ProgressDialog.show(MainActivity.this, getResources().getString(R.string.dialogtittle),
 				getResources().getString(R.string.dialogmassage), true);
 		// PDialog = new ProgressDialog(MainActivity.this);
@@ -461,13 +467,14 @@ public class MainActivity extends ActionBarActivity {
 				// TODO Auto-generated method stub
 				while (true) {
 					if (mService.mConnectionState == 2) {
+						Log.v("test", "444 " + mService.mConnectionState);
 						try {
-							Thread.sleep(500);
+							Thread.sleep(1000);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-
+						Log.v("test", "555 " + mService.mConnectionState);
 						tx = true;
 						// if (device.equals("Headset")) {
 						// mService.writeRXCharacteristic(uart.hex2Byte("10000000"));
@@ -476,14 +483,25 @@ public class MainActivity extends ActionBarActivity {
 						mService.writeRXCharacteristic(uart.hex2Byte("F0000000"));
 						// getSupportFragmentManager().beginTransaction().show(apollo).commit();
 						// }
-						Log.v("test", "" + uart.hex2Byte("F0000000"));
+						// Log.v("test", "" + uart.hex2Byte("F0000000"));
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						runOnUiThread(new Runnable() {
 							public void run() {
 								new CountDownTimer(3000, 1000) {
 
 									public void onFinish() {
-										if (PDialog != null)
+										if (PDialog != null) {
 											PDialog.dismiss();
+											PDialog = null;
+
+											if (mService != null)
+												mService.disconnect();
+										}
 									}
 
 									public void onTick(long millisUntilFinished) {

@@ -119,20 +119,20 @@ public class DeviceListActivity extends Activity {
 			return;
 		}
 		mEmptyList = (TextView) findViewById(R.id.empty);
-		populateList();
+
 		Button cancelButton = (Button) findViewById(R.id.btn_cancel);
 		cancelButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 
 				if (mScanning == false)
-					// scanLeDevice(true);
 					populateList();
 				else
 					finish();
 			}
 		});
-
+		
+		populateList();
 	}
 
 	private void populateList() {
@@ -148,14 +148,13 @@ public class DeviceListActivity extends Activity {
 		newDevicesListView.setAdapter(deviceAdapter);
 		newDevicesListView.setOnItemClickListener(mDeviceClickListener);
 		newDevicesListView.setOnItemLongClickListener(mDeviceLongClickListener);
-
 		scanLeDevice(true);
-
 	}
 
 	Runnable runnable = new Runnable() {
 		@Override
 		public void run() {
+			mBluetoothAdapter.startLeScan(mLeScanCallback);
 			while (myProgress < SCAN_PERIOD / 1000) {
 				try {
 					myHandle.sendMessage(myHandle.obtainMessage());
@@ -187,7 +186,6 @@ public class DeviceListActivity extends Activity {
 			pgbar.setProgress(myProgress);
 
 			mScanning = true;
-			mBluetoothAdapter.startLeScan(mLeScanCallback);
 			cancelButton.setText(R.string.cancel);
 
 			new Thread(runnable).start();
@@ -244,7 +242,7 @@ public class DeviceListActivity extends Activity {
 	@Override
 	public void onStart() {
 		super.onStart();
-
+		Log.d(TAG, "onStart");
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 		filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 		filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -253,12 +251,14 @@ public class DeviceListActivity extends Activity {
 	@Override
 	public void onStop() {
 		super.onStop();
+		Log.d(TAG, "onStop");
 		mBluetoothAdapter.stopLeScan(mLeScanCallback);
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		Log.d(TAG, "onDestroy");
 		mBluetoothAdapter.stopLeScan(mLeScanCallback);
 	}
 
@@ -376,7 +376,7 @@ public class DeviceListActivity extends Activity {
 			tvname.setText(device.getName());
 			tvadd.setText(device.getAddress());
 			if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-				Log.i(TAG, "device::" + device.getName());
+				//Log.i(TAG, "device::" + device.getName());
 				tvname.setTextColor(Color.WHITE);
 				tvadd.setTextColor(Color.WHITE);
 

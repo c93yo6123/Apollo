@@ -17,13 +17,11 @@ public class Uart {
 			for (int j = 0; j < format[i].length; j++) {
 				if (i == 0) {
 					int pars = Integer.parseInt(bin.substring(count, count + format[i][j]), 2);
-					// Log.v("test", "" + pars);
 					str += ((pars < 10) ? "0" : "") + Integer.toHexString(pars);
 				} else
 					str += Integer.parseInt(bin.substring(count, count + format[i][j]), 2);
 				count += format[i][j];
 			}
-			Log.v("test", "a " + str);
 			if (i == 0)
 				mStringList.add(str);
 			else {

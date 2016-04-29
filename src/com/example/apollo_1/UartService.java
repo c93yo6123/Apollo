@@ -41,7 +41,8 @@ import android.util.Log;
  * hosted on a given Bluetooth LE device.
  */
 public class UartService extends Service {
-	private final static String TAG = UartService.class.getSimpleName();
+//	private final static String TAG = UartService.class.getSimpleName();
+	private final static String TAG = "test";
 
 	private BluetoothManager mBluetoothManager;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -71,7 +72,7 @@ public class UartService extends Service {
 
 	// Implements callback methods for GATT events that the app cares about. For
 	// example,
-	// connection change and services discovered.	
+	// connection change and services discovered.
 	private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
 		@Override
 		public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -307,11 +308,13 @@ public class UartService extends Service {
 	 * @return
 	 */
 	public void enableTXNotification() {
-		/*
-		 * if (mBluetoothGatt == null) { showMessage("mBluetoothGatt null" +
-		 * mBluetoothGatt); broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
-		 * return; }
-		 */
+
+		if (mBluetoothGatt == null) {
+			showMessage("mBluetoothGatt null" + mBluetoothGatt);
+			broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
+			return;
+		}
+
 		BluetoothGattService RxService = mBluetoothGatt.getService(RX_SERVICE_UUID);
 		if (RxService == null) {
 			showMessage("Rx service not found!");
@@ -334,7 +337,7 @@ public class UartService extends Service {
 	public void writeRXCharacteristic(byte[] value) {
 
 		BluetoothGattService RxService = mBluetoothGatt.getService(RX_SERVICE_UUID);
-		showMessage("mBluetoothGatt null" + mBluetoothGatt);
+		// showMessage("mBluetoothGatt null" + mBluetoothGatt);
 		if (RxService == null) {
 			showMessage("Rx service not found!");
 			broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
